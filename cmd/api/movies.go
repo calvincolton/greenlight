@@ -9,6 +9,7 @@ import (
 	"github.com/calvincolton/greenlight/internal/validator"
 )
 
+// createMovieHandler accepts a request body and creates a new movie resource
 func (app *application) createMovieHandler(w http.ResponseWriter, r *http.Request) {
 	var input struct {
 		Title   string       `json:"title"`
@@ -52,6 +53,7 @@ func (app *application) createMovieHandler(w http.ResponseWriter, r *http.Reques
 	}
 }
 
+// showMovieHandler reads a movie's ID parameter and fetches that specific movie resource
 func (app *application) showMovieHandler(w http.ResponseWriter, r *http.Request) {
 	id, err := app.readIDParam(r)
 	if err != nil {
@@ -76,6 +78,7 @@ func (app *application) showMovieHandler(w http.ResponseWriter, r *http.Request)
 	}
 }
 
+// udpateMovieHandler accepts a request body performs a partial update of a movie resource
 func (app *application) updateMovieHandler(w http.ResponseWriter, r *http.Request) {
 	id, err := app.readIDParam(r)
 	if err != nil {
@@ -144,6 +147,7 @@ func (app *application) updateMovieHandler(w http.ResponseWriter, r *http.Reques
 	}
 }
 
+// deleteMovieHandler reads a movie's id parameter and deletes that specific movie resource
 func (app *application) deleteMovieHandler(w http.ResponseWriter, r *http.Request) {
 	id, err := app.readIDParam(r)
 	if err != nil {
@@ -166,4 +170,42 @@ func (app *application) deleteMovieHandler(w http.ResponseWriter, r *http.Reques
 	if err != nil {
 		app.serveErrorResponse(w, r, err)
 	}
+}
+
+func (app *application) listMoviesHandler(w http.ResponseWriter, r *http.Request) {
+	var input struct {
+		Title  string
+		Genres []string
+		data.Filters
+	}
+
+	v := validator.New()
+
+	qs := r.URL.Query()
+
+	input.Title = app.readString(qs, "title", "")
+	input.Genres = app.readCSV(qs, "genres", []string{})
+
+	input.Filters.Page = app.readInt(qs, "page", 1, v)
+	input.Filters.PageSize = app.readInt(qs, "page_size", 20, v)
+	input.Filters.Sort = app.readString(qs, "sort", "id")
+	input.Filters.SortSafelist = []string{"id", "title", "year", "runtime", "-id", "-title", "-year", "-runtime"}
+
+	if data.ValidateFilters(v, input.Filters); !v.Valid() {
+		app.failedValidationResponse(w, r, v.Errors)
+		return
+	}
+
+	movies, err := app.models.Movies.GetAll(input.Title, input.Genres, input.Filters)
+	if err != nil {
+		app.serveErrorResponse(w, r, err)
+		return
+	}
+
+	err = app.writeJSON(w, http.StatusOK, envelope{"movies": movies}, nil)
+	if err != nil {
+		app.serveErrorResponse(w, r, err)
+	}
+
+	// fmt.Fprintf(w, "%+v\n", input)
 }
