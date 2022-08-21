@@ -93,3 +93,7 @@ func (l *Logger) print(level Level, message string, properties map[string]string
 
 	return l.out.Write(append(line, '\n'))
 }
+
+func (l *Logger) Write(message []byte) (n int, err error) {
+	return l.print(LevelError, string(message), nil)
+}
