@@ -13,6 +13,7 @@ import (
 
 var (
 	ErrDuplicateEmail = errors.New("duplicate email")
+	AnonymousUser     = &User{}
 )
 
 type User struct {
@@ -219,4 +220,8 @@ func (m UserModel) Update(user *User) error {
 	}
 
 	return nil
+}
+
+func (u *User) IsAnonymous() bool {
+	return u == AnonymousUser
 }
