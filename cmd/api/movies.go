@@ -40,7 +40,7 @@ func (app *application) createMovieHandler(w http.ResponseWriter, r *http.Reques
 
 	err = app.models.Movies.Insert(movie)
 	if err != nil {
-		app.serveErrorResponse(w, r, err)
+		app.serverErrorResponse(w, r, err)
 		return
 	}
 
@@ -49,7 +49,7 @@ func (app *application) createMovieHandler(w http.ResponseWriter, r *http.Reques
 
 	err = app.writeJSON(w, http.StatusCreated, envelope{"movie": movie}, headers)
 	if err != nil {
-		app.serveErrorResponse(w, r, err)
+		app.serverErrorResponse(w, r, err)
 	}
 }
 
@@ -67,14 +67,14 @@ func (app *application) showMovieHandler(w http.ResponseWriter, r *http.Request)
 		case errors.Is(err, data.ErrRecordNotFound):
 			app.notFoundResopnse(w, r)
 		default:
-			app.serveErrorResponse(w, r, err)
+			app.serverErrorResponse(w, r, err)
 		}
 		return
 	}
 
 	err = app.writeJSON(w, http.StatusOK, envelope{"movie": movie}, nil)
 	if err != nil {
-		app.serveErrorResponse(w, r, err)
+		app.serverErrorResponse(w, r, err)
 	}
 }
 
@@ -92,7 +92,7 @@ func (app *application) updateMovieHandler(w http.ResponseWriter, r *http.Reques
 		case errors.Is(err, data.ErrRecordNotFound):
 			app.notFoundResopnse(w, r)
 		default:
-			app.serveErrorResponse(w, r, err)
+			app.serverErrorResponse(w, r, err)
 		}
 		return
 	}
@@ -136,14 +136,14 @@ func (app *application) updateMovieHandler(w http.ResponseWriter, r *http.Reques
 		case errors.Is(err, data.ErrEditConflict):
 			app.editConflictResponse(w, r)
 		default:
-			app.serveErrorResponse(w, r, err)
+			app.serverErrorResponse(w, r, err)
 		}
 		return
 	}
 
 	err = app.writeJSON(w, http.StatusOK, envelope{"movie": movie}, nil)
 	if err != nil {
-		app.serveErrorResponse(w, r, err)
+		app.serverErrorResponse(w, r, err)
 	}
 }
 
@@ -161,14 +161,14 @@ func (app *application) deleteMovieHandler(w http.ResponseWriter, r *http.Reques
 		case errors.Is(err, data.ErrRecordNotFound):
 			app.notFoundResopnse(w, r)
 		default:
-			app.serveErrorResponse(w, r, err)
+			app.serverErrorResponse(w, r, err)
 		}
 		return
 	}
 
 	err = app.writeJSON(w, http.StatusOK, envelope{"message": "movie successfully deleted"}, nil)
 	if err != nil {
-		app.serveErrorResponse(w, r, err)
+		app.serverErrorResponse(w, r, err)
 	}
 }
 
@@ -198,12 +198,12 @@ func (app *application) listMoviesHandler(w http.ResponseWriter, r *http.Request
 
 	movies, metadata, err := app.models.Movies.GetAll(input.Title, input.Genres, input.Filters)
 	if err != nil {
-		app.serveErrorResponse(w, r, err)
+		app.serverErrorResponse(w, r, err)
 		return
 	}
 
 	err = app.writeJSON(w, http.StatusOK, envelope{"movies": movies, "metadata": metadata}, nil)
 	if err != nil {
-		app.serveErrorResponse(w, r, err)
+		app.serverErrorResponse(w, r, err)
 	}
 }

@@ -26,7 +26,7 @@ func (app *application) recoverPanic(next http.Handler) http.Handler {
 				// The value returned by recover() has the type any, so we use fmt.Errorf() to normalize it
 				// into an error and call our serverErrorResponse() helper. In turn, this will log the error using
 				// our custom Logger type at the ERROR level and send the client a 500 Internal Server Error response.
-				app.serveErrorResponse(w, r, fmt.Errorf("%s", err))
+				app.serverErrorResponse(w, r, fmt.Errorf("%s", err))
 			}
 		}()
 
@@ -67,7 +67,7 @@ func (app *application) rateLimit(next http.Handler) http.Handler {
 		if app.config.limiter.enabled {
 			ip, _, err := net.SplitHostPort(r.RemoteAddr)
 			if err != nil {
-				app.serveErrorResponse(w, r, err)
+				app.serverErrorResponse(w, r, err)
 				return
 			}
 
@@ -127,7 +127,7 @@ func (app *application) authenticate(next http.Handler) http.Handler {
 			case errors.Is(err, data.ErrRecordNotFound):
 				app.invalidAuthenticationTokenResponse(w, r)
 			default:
-				app.serveErrorResponse(w, r, err)
+				app.serverErrorResponse(w, r, err)
 			}
 			return
 		}
@@ -172,7 +172,7 @@ func (app *application) requirePermission(code string, next http.HandlerFunc) ht
 
 		permissions, err := app.models.Permissions.GetAllForUser(user.ID)
 		if err != nil {
-			app.serveErrorResponse(w, r, err)
+			app.serverErrorResponse(w, r, err)
 			return
 		}
 

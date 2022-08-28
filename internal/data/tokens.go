@@ -2,10 +2,10 @@ package data
 
 import (
 	"context"
+	"crypto/rand"
 	"crypto/sha256"
 	"database/sql"
 	"encoding/base32"
-	"math/rand"
 	"time"
 
 	"github.com/calvincolton/greenlight/internal/validator"
@@ -49,8 +49,6 @@ func generateToken(userID int64, ttl time.Duration, scope string) (*Token, error
 
 	token.Plaintext = base32.StdEncoding.WithPadding(base32.NoPadding).EncodeToString(randomBytes)
 
-	// sha256.Sum256() function returns an *array* of length 32, so to make it easier to
-	// work with we convert it to a slice using the [:] operator before storing it.
 	hash := sha256.Sum256([]byte(token.Plaintext))
 	token.Hash = hash[:]
 
@@ -71,8 +69,8 @@ func (m TokenModel) New(userID int64, ttl time.Duration, scope string) (*Token, 
 // Insert() adds the data for a specific token to the tokens table.
 func (m TokenModel) Insert(token *Token) error {
 	query := `
-		INSERT INTO tokens (hash, user_id, expiry, scope) 
-		VALUES ($1, $2, $3, $4)`
+        INSERT INTO tokens (hash, user_id, expiry, scope) 
+        VALUES ($1, $2, $3, $4)`
 
 	args := []any{token.Hash, token.UserID, token.Expiry, token.Scope}
 
