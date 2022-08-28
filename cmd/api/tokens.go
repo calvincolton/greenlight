@@ -37,14 +37,14 @@ func (app *application) createAuthenticationTokenHandler(w http.ResponseWriter, 
 		case errors.Is(err, data.ErrRecordNotFound):
 			app.invalidCredentialsResponse(w, r)
 		default:
-			app.serveErrorResponse(w, r, err)
+			app.serverErrorResponse(w, r, err)
 		}
 		return
 	}
 
 	match, err := user.Password.Matches(input.Password)
 	if err != nil {
-		app.serveErrorResponse(w, r, err)
+		app.serverErrorResponse(w, r, err)
 		return
 	}
 
@@ -55,12 +55,12 @@ func (app *application) createAuthenticationTokenHandler(w http.ResponseWriter, 
 
 	token, err := app.models.Tokens.New(user.ID, 24*time.Hour, data.ScopeAuthentication)
 	if err != nil {
-		app.serveErrorResponse(w, r, err)
+		app.serverErrorResponse(w, r, err)
 		return
 	}
 
 	err = app.writeJSON(w, http.StatusCreated, envelope{"authentication_token": token}, nil)
 	if err != nil {
-		app.serveErrorResponse(w, r, err)
+		app.serverErrorResponse(w, r, err)
 	}
 }
