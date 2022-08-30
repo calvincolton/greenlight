@@ -1,3 +1,6 @@
+# Include variables from the .envrc file
+include .envrc
+
 ## help: print this help message
 .PHONY: help
 help:
@@ -11,7 +14,8 @@ confirm:
 ## run/api: run the cmd/api application
 .PHONY: run/api
 run/api:
-	go run ./cmd/api
+# suppress command echo via '@' so database credentials are not displayed
+	@go run ./cmd/api -db-dsn=${GREENLIGHT_DB_DSN} -smtp-username=${SMTP_USERNAME} -smtp-password=${SMTP_PASSWORD}
 
 ## db/psql: connect to the database using psql
 .PHONY: db/psql
