@@ -1,6 +1,7 @@
 package main
 
 import (
+	"expvar"
 	"net/http"
 
 	"github.com/calvincolton/greenlight/internal/store"
@@ -27,5 +28,8 @@ func (app *application) routes() http.Handler {
 
 	router.HandlerFunc(http.MethodPost, "/v1/tokens/authentication", app.createAuthenticaitonTokenHandler)
 
-	return app.recoverPanic(app.rateLimit(app.authenticate(router)))
+	// TODO: hide route via load balancer / reverse proxy so only available locally
+	router.Handler(http.MethodGet, "/debug/vars", expvar.Handler())
+
+	return app.metrics(app.recoverPanic(app.enableCORS(app.rateLimit(app.authenticate(router)))))
 }

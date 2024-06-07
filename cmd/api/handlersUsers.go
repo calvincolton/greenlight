@@ -126,6 +126,12 @@ func (app *application) activateUserHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
+	err = app.store.Permissions.AddForUser(user.ID, store.PermissionMoviesWrite)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+
 	err = app.store.Tokens.DeleteAllForUser(store.ScopeActivation, user.ID)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)

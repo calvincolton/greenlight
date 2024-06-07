@@ -3,10 +3,13 @@ package main
 import (
 	"context"
 	"database/sql"
+	"expvar"
 	"flag"
 	"fmt"
 	"log/slog"
 	"os"
+	"runtime"
+	"strings"
 	"sync"
 	"time"
 
@@ -36,6 +39,9 @@ type config struct {
 		password string
 		sender   string
 	}
+	cors struct {
+		trustedOrigins []string
+	}
 	limiter struct {
 		rps     float64
 		burst   int
@@ -57,10 +63,10 @@ func main() {
 	flag.IntVar(&cfg.port, "port", 4000, "API server port")
 	flag.StringVar(&cfg.env, "env", "development", "Environment (development|staging|production)")
 
-	flag.StringVar(&cfg.db.dsn, "db-dsn", os.Getenv("GREENLIGHT_DB_DSN"), "PostgreSQL DSN")
-	flag.StringVar(&cfg.db.name, "db-name", os.Getenv("GREENLIGHT_DB_NAME"), "PostgreSQL DB name")
-	flag.StringVar(&cfg.db.user, "db-user", os.Getenv("GREENLIGHT_DB_USER"), "PostgreSQL DB user")
-	flag.StringVar(&cfg.db.password, "db-pass", os.Getenv("GREENLIGHT_DB_PASSWORD"), "PostgreSQL DB password")
+	flag.StringVar(&cfg.db.dsn, "db-dsn", "", "PostgreSQL DSN")
+	flag.StringVar(&cfg.db.name, "db-name", "", "PostgreSQL DB name")
+	flag.StringVar(&cfg.db.user, "db-user", "", "PostgreSQL DB user")
+	flag.StringVar(&cfg.db.password, "db-pass", "", "PostgreSQL DB password")
 
 	flag.IntVar(&cfg.db.maxOpenConns, "db-max-open-conns", 25, "PostgreSQL max open connections")
 	flag.IntVar(&cfg.db.maxIdleConns, "db-max-idle-conns", 25, "PostgreSQL max idle connections")
@@ -68,14 +74,27 @@ func main() {
 
 	flag.StringVar(&cfg.smtp.host, "smtp-host", "sandbox.smtp.mailtrap.io", "SMTP host")
 	flag.IntVar(&cfg.smtp.port, "smtp-port", 25, "SMTP port")
-	flag.StringVar(&cfg.smtp.username, "smtp-username", os.Getenv("MAILTRAP_USERNAME"), "SMTP username")
-	flag.StringVar(&cfg.smtp.password, "smtp-password", os.Getenv("MAILTRAP_PASSWORD"), "SMTP password")
+	flag.StringVar(&cfg.smtp.username, "smtp-username", "", "SMTP username")
+	flag.StringVar(&cfg.smtp.password, "smtp-password", "", "SMTP password")
 	flag.StringVar(&cfg.smtp.sender, "smtp-sender", "Greenlight <no-reply@greenlight.com>", "SMTP sender")
 
 	flag.Float64Var(&cfg.limiter.rps, "limiter-rps", 4, "Rate limiter maximum requests per second")
 	flag.IntVar(&cfg.limiter.burst, "limiter-burst", 8, "Rate limiter maximum burst")
 	flag.BoolVar(&cfg.limiter.enabled, "limiter-enabled", true, "Enable rate limiter")
+
+	flag.Func("cors-trusted-origins", "Trusted CORS origins (space separated)", func(val string) error {
+		cfg.cors.trustedOrigins = strings.Fields(val)
+		return nil
+	})
+
+	displayVersion := flag.Bool("version", false, "Display version and exit")
+
 	flag.Parse()
+
+	if *displayVersion {
+		fmt.Printf("Version:\t%s\n", version)
+		os.Exit(0)
+	}
 
 	// logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
@@ -91,6 +110,17 @@ func main() {
 	defer db.Close()
 
 	logger.Info("database connection pool established")
+
+	expvar.NewString("version").Set(version)
+	expvar.Publish("goroutines", expvar.Func(func() any {
+		return runtime.NumGoroutine()
+	}))
+	expvar.Publish("database", expvar.Func(func() any {
+		return db.Stats()
+	}))
+	expvar.Publish("timestamp", expvar.Func(func() any {
+		return time.Now().Unix()
+	}))
 
 	app := &application{
 		config: cfg,
