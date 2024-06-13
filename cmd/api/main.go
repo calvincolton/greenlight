@@ -6,6 +6,7 @@ import (
 	"expvar"
 	"flag"
 	"fmt"
+	"log"
 	"log/slog"
 	"os"
 	"runtime"
@@ -28,9 +29,6 @@ type config struct {
 	env  string
 	db   struct {
 		dsn          string
-		name         string
-		user         string
-		password     string
 		maxOpenConns int
 		maxIdleConns int
 		maxIdleTime  time.Duration
@@ -66,11 +64,7 @@ func main() {
 	flag.IntVar(&cfg.port, "port", 8080, "API server port")
 	flag.StringVar(&cfg.env, "env", "development", "Environment (development|staging|production)")
 
-	flag.StringVar(&cfg.db.dsn, "db-dsn", "", "PostgreSQL DSN")
-	flag.StringVar(&cfg.db.name, "db-name", "", "PostgreSQL DB name")
-	flag.StringVar(&cfg.db.user, "db-user", "", "PostgreSQL DB user")
-	flag.StringVar(&cfg.db.password, "db-pass", "", "PostgreSQL DB password")
-
+	flag.StringVar(&cfg.db.dsn, "db-dsn", os.Getenv("GREENLIGHT_DB_DSN"), "PostgreSQL DSN")
 	flag.IntVar(&cfg.db.maxOpenConns, "db-max-open-conns", 25, "PostgreSQL max open connections")
 	flag.IntVar(&cfg.db.maxIdleConns, "db-max-idle-conns", 25, "PostgreSQL max idle connections")
 	flag.DurationVar(&cfg.db.maxIdleTime, "db-max-idle-time", 15*time.Minute, "PostgreSQL max connection idle time")
@@ -93,13 +87,13 @@ func main() {
 	displayVersion := flag.Bool("version", false, "Display version and exit")
 
 	flag.Parse()
+	log.Println("DB-DSN:", cfg.db.dsn)
 
 	if *displayVersion {
 		fmt.Printf("Version:\t%s\n", version)
 		os.Exit(0)
 	}
 
-	// logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
 		Level:     slog.LevelDebug,
 		AddSource: true,
@@ -146,15 +140,7 @@ func main() {
 }
 
 func openDB(cfg config) (*sql.DB, error) {
-	connStr := fmt.Sprintf(
-		"user=%s password=%s dbname=%s sslmode=disable",
-		cfg.db.user,
-		cfg.db.password,
-		cfg.db.name,
-	)
-
-	// db, err := sql.Open("postgres", cfg.db.dsn)
-	db, err := sql.Open("postgres", connStr)
+	db, err := sql.Open("postgres", cfg.db.dsn)
 	if err != nil {
 		return nil, err
 	}

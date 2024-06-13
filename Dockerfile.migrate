@@ -1,7 +1,19 @@
-FROM migrate/migrate:v4.17.1
+FROM alpine:latest
 
-# Copy the migrations directory into the container
-COPY ./migrations /migrations
+# Install PostgreSQL client and curl
+RUN apk add --no-cache postgresql-client curl
 
-# Set the entrypoint to run migrations
-ENTRYPOINT ["migrate", "-path", "/migrations", "-database"]
+# Install the migrate tool
+RUN curl -L https://github.com/golang-migrate/migrate/releases/download/v4.15.2/migrate.linux-amd64.tar.gz | tar xvz -C /usr/local/bin
+
+# Copy the wait-for-postgres.sh script
+COPY wait-for-postgres.sh /wait-for-postgres.sh
+
+# Make the script executable
+RUN chmod +x /wait-for-postgres.sh
+
+# Set the entrypoint to the wait-for-postgres.sh script
+ENTRYPOINT ["/wait-for-postgres.sh", "db"]
+
+# Add the migrate command as the default command
+CMD ["migrate", "-path", "/migrations", "-database", "${GREENLIGHT_DB_DSN}", "up"]

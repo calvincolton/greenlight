@@ -22,11 +22,20 @@ FROM alpine:latest
 # Set the Current Working Directory inside the container
 WORKDIR /root/
 
+# Install PostgreSQL client
+RUN apk add --no-cache postgresql-client
+
 # Copy the Pre-built binary file from the previous stage
 COPY --from=builder /app/main .
+
+# Copy the wait-for-postgres.sh script
+COPY wait-for-postgres.sh .
+
+# Make the script executable
+RUN chmod +x wait-for-postgres.sh
 
 # Expose port 8080 to the outside world
 EXPOSE 8080
 
 # Command to run the executable
-CMD ["./main"]
+CMD ["./wait-for-postgres.sh", "db", "./main"]

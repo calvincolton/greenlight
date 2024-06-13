@@ -12,7 +12,6 @@ services:
       GREENLIGHT_DB_NAME: ${GREENLIGHT_DB_NAME}
       GREENLIGHT_DB_USER: ${GREENLIGHT_DB_USER}
       GREENLIGHT_DB_PASSWORD: ${GREENLIGHT_DB_PASSWORD}
-      GREENLIGHT_DB_DSN: ${GREENLIGHT_DB_DSN}
     ports:
       - "5432:5432"
     volumes:
@@ -26,10 +25,9 @@ services:
       context: .
       dockerfile: Dockerfile.api
     environment:
-      GREENLIGHT_DB_NAME: ${GREENLIGHT_DB_NAME}
+      GREENLIGHT_DB_DSN: ${GREENLIGHT_DB_DSN}
       GREENLIGHT_DB_USER: ${GREENLIGHT_DB_USER}
       GREENLIGHT_DB_PASSWORD: ${GREENLIGHT_DB_PASSWORD}
-      GREENLIGHT_DB_DSN: ${GREENLIGHT_DB_DSN}
       MAILTRAP_USERNAME: ${MAILTRAP_USERNAME}
       MAILTRAP_PASSWORD: ${MAILTRAP_PASSWORD}
     ports:
@@ -43,8 +41,16 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.migrate
+    environment:
+      GREENLIGHT_DB_DSN: ${GREENLIGHT_DB_DSN}
+      GREENLIGHT_DB_USER: ${GREENLIGHT_DB_USER}
+      GREENLIGHT_DB_PASSWORD: ${GREENLIGHT_DB_PASSWORD}
+    volumes:
+      - ./migrations:/migrations
     entrypoint:
       [
+        "/wait-for-postgres.sh",
+        "db",
         "migrate",
         "-path",
         "/migrations",
