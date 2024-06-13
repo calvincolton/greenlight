@@ -1,0 +1,7 @@
+FROM migrate/migrate:v4.17.1
+
+# Copy the migrations directory into the container
+COPY ./migrations /migrations
+
+# Set the entrypoint to run migrations
+ENTRYPOINT ["migrate", "-path", "/migrations", "-database"]

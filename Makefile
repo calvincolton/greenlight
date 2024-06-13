@@ -1,4 +1,4 @@
-include .envrc
+include .env
 
 # ==================================================================================== #
 # HELPERS
@@ -21,18 +21,12 @@ confirm:
 ## run/api: run the cmd/api application
 .PHONY: run/api
 run/api:
-	go run ./cmd/api \
-	-db-name=${GREENLIGHT_DB_NAME} \
-	-db-user=${GREENLIGHT_DB_USER} \
-	-db-pass=${GREENLIGHT_DB_PASSWORD} \
-	-db-dsn=${GREENLIGHT_DB_DSN} \
-	-smtp-username=${MAILTRAP_USERNAME} \
-	-smtp-password=${MAILTRAP_PASSWORD}
+	docker-compose up -d api
 
 ## db/psql: connect to the database using psql
 .PHONY: db/psql
 db/psql:
-	psql ${GREENLIGHT_DB_DSN}
+	docker-compose exec db psql -U $$(grep ^GREENLIGHT_DB_USER .env | cut -d '=' -f2 | tr -d '\r') -d $$(grep ^GREENLIGHT_DB_NAME .env | cut -d '=' -f2 | tr -d '\r')
 
 ## db/migrations/new name=$1: create a new database migration
 .PHONY: db/migrations/new
@@ -44,7 +38,7 @@ db/migrations/new:
 .PHONY: db/migrations/up
 db/migrations/up: confirm
 	@echo 'Running up migrations...'
-	migrate -path ./migrations -database ${GREENLIGHT_DB_DSN} up
+	docker-compose run --rm migrate
 
 # ==================================================================================== #
 # BUILD

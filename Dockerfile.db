@@ -1,0 +1,7 @@
+FROM postgres:15
+
+# Add a custom script to initialize the database and install citext
+COPY init-db.sh /docker-entrypoint-initdb.d/
+
+# Expose port 5432 to the outside world
+EXPOSE 5432
