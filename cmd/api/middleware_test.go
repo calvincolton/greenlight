@@ -9,7 +9,7 @@ import (
 )
 
 func TestRateLimitMiddleware(t *testing.T) {
-	app := newTestApplication()
+	app := &application{}
 
 	app.config.limiter.enabled = true
 	app.config.limiter.rps = 2 // Allow 2 requests per second for testing
@@ -48,7 +48,7 @@ func TestRateLimitMiddleware(t *testing.T) {
 func TestMetricsMiddleware(t *testing.T) {
 	// resetMetrics() // Reset metrics before each test
 
-	app := newTestApplication()
+	app := &application{}
 
 	// Create a simple test handler that just returns a 200 OK response
 	testHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -86,7 +86,8 @@ func TestMetricsMiddleware(t *testing.T) {
 }
 
 func TestEnableCORSMiddleware(t *testing.T) {
-	app := newTestApplication()
+	app := &application{}
+	app.config.cors.trustedOrigins = []string{"https://trusted.com"}
 
 	testHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)

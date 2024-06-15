@@ -5,7 +5,11 @@ host="$1"
 shift
 cmd="$@"
 
-until PGPASSWORD=$GREENLIGHT_DB_PASSWORD psql -h "$host" -U "$GREENLIGHT_DB_USER" -c '\q'; do
+echo "Waiting for Postgres with the following details:"
+echo "Host: $host"
+echo "User: $DATABASE_USER"
+
+until PGPASSWORD=$DATABASE_PASSWORD psql -h "$host" -U "$DATABASE_USER" -c '\q'; do
   >&2 echo "Postgres is unavailable - sleeping"
   sleep 1
 done

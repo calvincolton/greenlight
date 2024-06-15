@@ -16,4 +16,4 @@ RUN chmod +x /wait-for-postgres.sh
 ENTRYPOINT ["/wait-for-postgres.sh", "db"]
 
 # Add the migrate command as the default command
-CMD ["migrate", "-path", "/migrations", "-database", "${GREENLIGHT_DB_DSN}", "up"]
+CMD ["migrate", "-path", "/migrations", "-database", "${DATABASE_DSN}", "up"]

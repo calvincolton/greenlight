@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/calvincolton/greenlight/internal/httputils"
 	"github.com/calvincolton/greenlight/internal/store"
 	"github.com/calvincolton/greenlight/internal/validator"
 )
@@ -17,7 +18,7 @@ func (app *application) createMovieHandler(w http.ResponseWriter, r *http.Reques
 		Genres  []string `json:"genres"`
 	}
 
-	err := app.readJSON(w, r, &input)
+	err := httputils.ReadJSON(w, r, &input)
 	if err != nil {
 		app.badRequestResponse(w, r, err)
 		return
@@ -46,14 +47,16 @@ func (app *application) createMovieHandler(w http.ResponseWriter, r *http.Reques
 	headers := make(http.Header)
 	headers.Set("Location", fmt.Sprintf("/v1/movies/%d", movie.ID))
 
-	err = app.writeJSON(w, http.StatusCreated, envelope{"movie": movie}, headers)
+	data := map[string]any{"movie": movie}
+
+	err = httputils.WriteJSON(w, http.StatusCreated, data, headers)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 	}
 }
 
 func (app *application) showMovieHandler(w http.ResponseWriter, r *http.Request) {
-	id, err := app.readIDParam("movieID", r)
+	id, err := httputils.ReadIDParam("movieID", r)
 	if err != nil {
 		app.notFoundResponse(w, r)
 		return
@@ -70,14 +73,16 @@ func (app *application) showMovieHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	err = app.writeJSON(w, http.StatusOK, envelope{"movie": movie}, nil)
+	data := map[string]any{"movie": movie}
+
+	err = httputils.WriteJSON(w, http.StatusOK, data, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 	}
 }
 
 func (app *application) putMovieHandler(w http.ResponseWriter, r *http.Request) {
-	id, err := app.readIDParam("movieID", r)
+	id, err := httputils.ReadIDParam("movieID", r)
 	if err != nil {
 		app.notFoundResponse(w, r)
 		return
@@ -101,7 +106,7 @@ func (app *application) putMovieHandler(w http.ResponseWriter, r *http.Request) 
 		Genres  []string `json:"genres"`
 	}
 
-	err = app.readJSON(w, r, &input)
+	err = httputils.ReadJSON(w, r, &input)
 	if err != nil {
 		app.badRequestResponse(w, r, err)
 		return
@@ -130,14 +135,16 @@ func (app *application) putMovieHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	err = app.writeJSON(w, http.StatusOK, envelope{"movie": movie}, nil)
+	data := map[string]any{"movie": movie}
+
+	err = httputils.WriteJSON(w, http.StatusOK, data, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 	}
 }
 
 func (app *application) patchMovieHandler(w http.ResponseWriter, r *http.Request) {
-	id, err := app.readIDParam("movieID", r)
+	id, err := httputils.ReadIDParam("movieID", r)
 	if err != nil {
 		app.notFoundResponse(w, r)
 		return
@@ -161,7 +168,7 @@ func (app *application) patchMovieHandler(w http.ResponseWriter, r *http.Request
 		Genres  []string `json:"genres"`
 	}
 
-	err = app.readJSON(w, r, &input)
+	err = httputils.ReadJSON(w, r, &input)
 	if err != nil {
 		app.badRequestResponse(w, r, err)
 		return
@@ -198,14 +205,16 @@ func (app *application) patchMovieHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	err = app.writeJSON(w, http.StatusOK, envelope{"movie": movie}, nil)
+	data := map[string]any{"movie": movie}
+
+	err = httputils.WriteJSON(w, http.StatusOK, data, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 	}
 }
 
 func (app *application) deleteMovieHandler(w http.ResponseWriter, r *http.Request) {
-	id, err := app.readIDParam("movieID", r)
+	id, err := httputils.ReadIDParam("movieID", r)
 	if err != nil {
 		app.notFoundResponse(w, r)
 		return
@@ -222,7 +231,9 @@ func (app *application) deleteMovieHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	err = app.writeJSON(w, http.StatusOK, envelope{"message": "movie successfully deleted"}, nil)
+	data := map[string]any{"message": "movie successfully deleted"}
+
+	err = httputils.WriteJSON(w, http.StatusOK, data, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 	}
@@ -239,14 +250,14 @@ func (app *application) listMoviesHandler(w http.ResponseWriter, r *http.Request
 
 	qs := r.URL.Query()
 
-	input.Title = app.readStrings(qs, "title", "")
-	input.Genres = app.readCSV(qs, "genres", []string{})
+	input.Title = httputils.ReadStrings(qs, "title", "")
+	input.Genres = httputils.ReadCSV(qs, "genres", []string{})
 
-	input.Filters.Page = app.readInt(qs, "page", 1, v)
-	input.Filters.PageSize = app.readInt(qs, "page_size", 20, v)
-	input.Filters.Sort = app.readStrings(qs, "sort", "id")
+	input.Filters.Page = httputils.ReadInt(qs, "page", 1, v)
+	input.Filters.PageSize = httputils.ReadInt(qs, "page_size", 20, v)
+	input.Filters.Sort = httputils.ReadStrings(qs, "sort", "id")
 	input.Filters.SortSafeList = []string{"id", "title", "year", "runtime"}
-	input.Filters.Order = app.readStrings(qs, "order", "asc")
+	input.Filters.Order = httputils.ReadStrings(qs, "order", "asc")
 
 	if store.ValidateFilters(v, input.Filters); !v.Valid() {
 		app.failedValidationResponse(w, r, v.Errors)
@@ -259,7 +270,9 @@ func (app *application) listMoviesHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	err = app.writeJSON(w, http.StatusOK, envelope{"movies": movies, "metadata": metadata}, nil)
+	data := map[string]any{"movies": movies, "metadata": metadata}
+
+	err = httputils.WriteJSON(w, http.StatusOK, data, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 	}

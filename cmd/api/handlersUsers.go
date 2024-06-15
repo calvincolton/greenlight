@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/calvincolton/greenlight/internal/httputils"
 	"github.com/calvincolton/greenlight/internal/store"
 	"github.com/calvincolton/greenlight/internal/validator"
 )
@@ -16,7 +17,7 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 		Password string `json:"password"`
 	}
 
-	err := app.readJSON(w, r, &input)
+	err := httputils.ReadJSON(w, r, &input)
 	if err != nil {
 		app.badRequestResponse(w, r, err)
 		return
@@ -76,8 +77,9 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 			app.logger.Error(err.Error())
 		}
 	})
+	data := map[string]any{"user": user}
 
-	err = app.writeJSON(w, http.StatusAccepted, envelope{"user": user}, nil)
+	err = httputils.WriteJSON(w, http.StatusAccepted, data, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 	}
@@ -88,7 +90,7 @@ func (app *application) activateUserHandler(w http.ResponseWriter, r *http.Reque
 		TokenPlaintext string `json:"token"`
 	}
 
-	err := app.readJSON(w, r, &input)
+	err := httputils.ReadJSON(w, r, &input)
 	if err != nil {
 		app.badRequestResponse(w, r, err)
 		return
@@ -137,8 +139,9 @@ func (app *application) activateUserHandler(w http.ResponseWriter, r *http.Reque
 		app.serverErrorResponse(w, r, err)
 		return
 	}
+	data := map[string]any{"user": user}
 
-	err = app.writeJSON(w, http.StatusOK, envelope{"user": user}, nil)
+	err = httputils.WriteJSON(w, http.StatusOK, data, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 	}

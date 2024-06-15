@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/calvincolton/greenlight/internal/httputils"
 	"github.com/calvincolton/greenlight/internal/store"
 	"github.com/calvincolton/greenlight/internal/validator"
 )
@@ -15,7 +16,7 @@ func (app *application) createAuthenticaitonTokenHandler(w http.ResponseWriter, 
 		Password string `json:"password"`
 	}
 
-	err := app.readJSON(w, r, &input)
+	err := httputils.ReadJSON(w, r, &input)
 	if err != nil {
 		app.badRequestResponse(w, r, err)
 		return
@@ -57,7 +58,9 @@ func (app *application) createAuthenticaitonTokenHandler(w http.ResponseWriter, 
 		return
 	}
 
-	err = app.writeJSON(w, http.StatusCreated, envelope{"authentication_token": token}, nil)
+	data := map[string]any{"authentication_token": token}
+
+	err = httputils.WriteJSON(w, http.StatusCreated, data, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 	}

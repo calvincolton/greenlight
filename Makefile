@@ -23,10 +23,14 @@ confirm:
 run/api:
 	docker-compose up -d api
 
+.PHONY: run/all
+run/all:
+	docker-compose -p greenlight up --build
+
 ## db/psql: connect to the database using psql
 .PHONY: db/psql
 db/psql:
-	docker-compose exec db psql -U $$(grep ^GREENLIGHT_DB_USER .env | cut -d '=' -f2 | tr -d '\r') -d $$(grep ^GREENLIGHT_DB_NAME .env | cut -d '=' -f2 | tr -d '\r')
+	docker-compose exec db psql -U $$(grep ^DATABASE_USER .env | cut -d '=' -f2 | tr -d '\r') -d $$(grep ^DATABASE_NAME .env | cut -d '=' -f2 | tr -d '\r')
 
 ## db/migrations/new name=$1: create a new database migration
 .PHONY: db/migrations/new
