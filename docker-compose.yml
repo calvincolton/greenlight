@@ -25,28 +25,12 @@ services:
       timeout: 5s
       retries: 5
 
-  api:
-    build:
-      context: .
-      dockerfile: Dockerfile.api
-    environment:
-      DATABASE_DSN: ${DATABASE_DSN}
-      DATABASE_USER: ${DATABASE_USER}
-      DATABASE_PASSWORD: ${DATABASE_PASSWORD}
-      SMTP_USERNAME: ${SMTP_USERNAME}
-      SMTP_PASSWORD: ${SMTP_PASSWORD}
-    ports:
-      - "8080:8080"
-    depends_on:
-      - db
-    networks:
-      - greenlight-network
-
   migrate:
     build:
       context: .
       dockerfile: Dockerfile.migrate
     environment:
+      DATABASE_NAME: ${DATABASE_NAME}
       DATABASE_DSN: ${DATABASE_DSN}
       DATABASE_USER: ${DATABASE_USER}
       DATABASE_PASSWORD: ${DATABASE_PASSWORD}
@@ -64,7 +48,27 @@ services:
         "up",
       ]
     depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - greenlight-network
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    environment:
+      DATABASE_NAME: ${DATABASE_NAME}
+      DATABASE_DSN: ${DATABASE_DSN}
+      DATABASE_USER: ${DATABASE_USER}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD}
+      SMTP_USERNAME: ${SMTP_USERNAME}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+    ports:
+      - "8080:8080"
+    depends_on:
       - db
+      - migrate
     networks:
       - greenlight-network
 

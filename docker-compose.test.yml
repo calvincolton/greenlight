@@ -11,11 +11,12 @@ services:
       DATABASE_NAME: ${TEST_DATABASE_NAME}
       DATABASE_USER: ${DATABASE_USER}
       DATABASE_PASSWORD: ${DATABASE_PASSWORD}
+      DATABASE_DSN: postgres://${DATABASE_USER}:${DATABASE_PASSWORD}@db:5432/${TEST_DATABASE_NAME}?sslmode=disable
+    ports:
+      - "5433:5432"
     volumes:
       - test_db_data:/var/lib/postgresql/data
       - ./init-db.sh:/docker-entrypoint-initdb.d/init-db.sh
-    ports:
-      - "5433:5432"
     networks:
       - test_network
     healthcheck:
@@ -24,39 +25,15 @@ services:
       timeout: 5s
       retries: 5
 
-  api:
-    build:
-      context: .
-      dockerfile: Dockerfile.api
-    container_name: test_api
-    environment:
-      DATABASE_DSN: postgres://${DATABASE_USER}:${DATABASE_PASSWORD}@db:5432/${TEST_DATABASE_NAME}?sslmode=disable
-      DATABASE_USER: ${DATABASE_USER}
-      DATABASE_PASSWORD: ${DATABASE_PASSWORD}
-      SMTP_USERNAME: ${SMTP_USERNAME}
-      SMTP_PASSWORD: ${SMTP_PASSWORD}
-    ports:
-      - "8081:8080"
-    depends_on:
-      db:
-        condition: service_healthy
-    networks:
-      - test_network
-    healthcheck:
-      test:
-        ["CMD-SHELL", "curl -f http://localhost:8081/v1/healthcheck || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-
   migrate:
     build:
       context: .
       dockerfile: Dockerfile.migrate
     environment:
-      DATABASE_DSN: postgres://${DATABASE_USER}:${DATABASE_PASSWORD}@db:5432/${TEST_DATABASE_NAME}?sslmode=disable
+      DATABASE_NAME: ${TEST_DATABASE_NAME}
       DATABASE_USER: ${DATABASE_USER}
       DATABASE_PASSWORD: ${DATABASE_PASSWORD}
+      DATABASE_DSN: postgres://${DATABASE_USER}:${DATABASE_PASSWORD}@db:5432/${TEST_DATABASE_NAME}?sslmode=disable
     volumes:
       - ./migrations:/migrations
     entrypoint:
@@ -75,6 +52,32 @@ services:
         condition: service_healthy
     networks:
       - test_network
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    container_name: test_api
+    environment:
+      DATABASE_NAME: ${TEST_DATABASE_NAME}
+      DATABASE_USER: ${DATABASE_USER}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD}
+      DATABASE_DSN: postgres://${DATABASE_USER}:${DATABASE_PASSWORD}@db:5432/${TEST_DATABASE_NAME}?sslmode=disable
+      SMTP_USERNAME: ${SMTP_USERNAME}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+    ports:
+      - "8081:8080"
+    depends_on:
+      - db
+      - migrate
+    networks:
+      - test_network
+    healthcheck:
+      test:
+        ["CMD-SHELL", "curl -f http://localhost:8081/v1/healthcheck || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
 
 volumes:
   test_db_data:

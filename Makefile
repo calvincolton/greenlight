@@ -30,7 +30,7 @@ run/all:
 ## db/psql: connect to the database using psql
 .PHONY: db/psql
 db/psql:
-	docker-compose exec db psql -U $$(grep ^DATABASE_USER .env | cut -d '=' -f2 | tr -d '\r') -d $$(grep ^DATABASE_NAME .env | cut -d '=' -f2 | tr -d '\r')
+	docker-compose -p greenlight_dev exec db psql -U $(DATABASE_USER) -d $(DATABASE_NAME)
 
 ## db/migrations/new name=$1: create a new database migration
 .PHONY: db/migrations/new
