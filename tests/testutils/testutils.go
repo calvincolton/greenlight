@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -64,7 +65,7 @@ func MakeRequest(
 	url string,
 	body interface{},
 	expectedStatus int,
-) *http.Response {
+) (*http.Response, error) {
 	t.Helper()
 
 	var jsonData []byte
@@ -73,25 +74,25 @@ func MakeRequest(
 	if body != nil {
 		jsonData, err = json.Marshal(body)
 		if err != nil {
-			t.Fatalf("could not marshal request body: %v", err)
+			return nil, fmt.Errorf("could not marshal request body: %v", err)
 		}
 	}
 
 	req, err := http.NewRequest(method, url, bytes.NewBuffer(jsonData))
 	if err != nil {
-		t.Fatalf("could not create request: %v", err)
+		return nil, fmt.Errorf("could not create request: %v", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		t.Fatalf("could not make request: %v", err)
+		return nil, fmt.Errorf("could not make request: %v", err)
 	}
 
 	if resp.StatusCode != expectedStatus {
-		t.Fatalf("expected status %d, got %d", expectedStatus, resp.StatusCode)
+		return resp, fmt.Errorf("expected status %d, got %d", expectedStatus, resp.StatusCode)
 	}
 
-	return resp
+	return resp, nil
 }
