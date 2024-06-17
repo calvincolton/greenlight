@@ -6,7 +6,6 @@ import (
 	"expvar"
 	"flag"
 	"fmt"
-	"log"
 	"log/slog"
 	"os"
 	"runtime"
@@ -87,7 +86,6 @@ func main() {
 	displayVersion := flag.Bool("version", false, "Display version and exit")
 
 	flag.Parse()
-	log.Println("DB-DSN:", cfg.db.dsn)
 
 	if *displayVersion {
 		fmt.Printf("Version:\t%s\n", version)

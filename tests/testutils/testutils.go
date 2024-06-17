@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"database/sql"
 	"encoding/json"
-	"flag"
 	"log"
 	"net/http"
 	"os"
@@ -40,26 +39,11 @@ func StopDockerCompose() error {
 }
 
 func SetupDatabase(t *testing.T) {
-	var err error
-	var databaseDSN string
-
-	flag.StringVar(&databaseDSN, "test-db-dsn", os.Getenv("TEST_DATABASE_DSN"), "PostgreSQL DSN")
-	flag.Parse()
-
 	if err := StartDockerCompose(); err != nil {
 		if t != nil {
 			t.Fatalf("could not start Docker Compose: %v", err)
 		} else {
 			log.Fatalf("could not start Docker Compose: %v", err)
-		}
-	}
-
-	DB, err = sql.Open("postgres", databaseDSN)
-	if err != nil {
-		if t != nil {
-			t.Fatalf("could not connect to test database: %v", err)
-		} else {
-			log.Fatalf("could not connect to test database: %v", err)
 		}
 	}
 }

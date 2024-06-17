@@ -25,12 +25,16 @@ run/api:
 
 .PHONY: run/all
 run/all:
-	docker-compose -p greenlight up --build
+	docker-compose --env-file .env -p $(PROJECT_NAME) up --build
+
+.PHONY: down/all
+down/all:
+	docker-compose down -v
 
 ## db/psql: connect to the database using psql
 .PHONY: db/psql
 db/psql:
-	docker-compose -p greenlight_dev exec db psql -U $(DATABASE_USER) -d $(DATABASE_NAME)
+	docker-compose -p $(PROJECT_NAME) exec db psql -U $(DATABASE_USER) -d $(DATABASE_NAME)
 
 ## db/migrations/new name=$1: create a new database migration
 .PHONY: db/migrations/new
