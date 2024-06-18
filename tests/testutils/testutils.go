@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"os/exec"
@@ -37,26 +36,6 @@ func StartDockerCompose() error {
 
 func StopDockerCompose() error {
 	return runCommandWithProject("docker-compose", "greenlight_test", "-f", dockerComposeFile, "down")
-}
-
-func SetupDatabase(t *testing.T) {
-	if err := StartDockerCompose(); err != nil {
-		if t != nil {
-			t.Fatalf("could not start Docker Compose: %v", err)
-		} else {
-			log.Fatalf("could not start Docker Compose: %v", err)
-		}
-	}
-}
-
-func TeardownDatabase(t *testing.T) {
-	if err := StopDockerCompose(); err != nil {
-		if t != nil {
-			t.Logf("could not stop docker-compose: %v", err)
-		} else {
-			log.Printf("could not stop docker-compose: %v", err)
-		}
-	}
 }
 
 func MakeRequest(
@@ -95,4 +74,30 @@ func MakeRequest(
 	}
 
 	return resp, nil
+}
+
+func Equal(a, b map[string]any) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for k, v := range a {
+		if vb, ok := b[k]; !ok || !deepEqual(v, vb) {
+			return false
+		}
+	}
+	return true
+}
+
+// Helper function to deeply compare two values
+func deepEqual(a, b any) bool {
+	jsonA, errA := json.Marshal(a)
+	if errA != nil {
+		return false
+	}
+	jsonB, errB := json.Marshal(b)
+	if errB != nil {
+		return false
+	}
+
+	return bytes.Equal(jsonA, jsonB)
 }

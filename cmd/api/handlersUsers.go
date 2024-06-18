@@ -54,12 +54,6 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	err = app.store.Permissions.AddForUser(user.ID, store.PermissionMoviesRead)
-	if err != nil {
-		app.serverErrorResponse(w, r, err)
-		return
-	}
-
 	token, err := app.store.Tokens.New(user.ID, 2*24*time.Hour, store.ScopeActivation)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)

@@ -8,8 +8,8 @@ import (
 	"github.com/calvincolton/greenlight/tests/testutils"
 )
 
-func TestHandlersHealth(t *testing.T) {
-	resp, err := testutils.MakeRequest(t, http.MethodGet, "http://localhost:8081/v1/healthcheck", nil, http.StatusOK)
+func TestShowMovieHandler(t *testing.T) {
+	resp, err := testutils.MakeRequest(t, http.MethodGet, "http://localhost:8081/v1/movies/1", nil, http.StatusOK)
 	if err != nil {
 		t.Fatalf("could not make request: %v", err)
 	}
@@ -22,10 +22,13 @@ func TestHandlersHealth(t *testing.T) {
 	}
 
 	expected := map[string]any{
-		"status": "available",
-		"system_info": map[string]string{
-			"environment": "development",
-			"version":     "-",
+		"movie": map[string]any{
+			"id":      1,
+			"title":   "Moana",
+			"year":    2018,
+			"runtime": 134,
+			"genres":  []string{"action", "adventure"},
+			"version": 1,
 		},
 	}
 

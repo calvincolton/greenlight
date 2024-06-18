@@ -78,7 +78,7 @@ services:
       db:
         condition: service_healthy
       migrate:
-        condition: service_started
+        condition: service_completed_successfully
     networks:
       - test_network
     healthcheck:

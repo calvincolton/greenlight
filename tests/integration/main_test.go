@@ -12,7 +12,7 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	testutils.SetupDatabase(nil)
+	testutils.StartDockerCompose()
 
 	if err := waitForServer("http://localhost:8081/v1/healthcheck", 10, 2*time.Second); err != nil {
 		log.Fatalf("server did not become ready: %v", err)
@@ -21,7 +21,7 @@ func TestMain(m *testing.M) {
 	// Run tests
 	code := m.Run()
 
-	testutils.TeardownDatabase(nil)
+	testutils.StopDockerCompose()
 
 	os.Exit(code)
 }

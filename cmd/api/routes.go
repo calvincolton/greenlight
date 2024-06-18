@@ -17,8 +17,11 @@ func (app *application) routes() http.Handler {
 	router.HandlerFunc(http.MethodGet, "/v1/healthcheck", app.healthcheckHandler)
 
 	router.HandlerFunc(http.MethodPost, "/v1/movies", app.requirePermission(store.PermissionMoviesWrite, app.createMovieHandler))
-	router.HandlerFunc(http.MethodGet, "/v1/movies", app.requirePermission(store.PermissionMoviesRead, app.listMoviesHandler))
-	router.HandlerFunc(http.MethodGet, "/v1/movies/:movieID", app.requirePermission(store.PermissionMoviesRead, app.showMovieHandler))
+	router.HandlerFunc(http.MethodGet, "/v1/movies", app.listMoviesHandler)
+	router.HandlerFunc(http.MethodGet, "/v1/movies/:movieID", app.showMovieHandler)
+	// if you want to have resources accessible only to authenticated users:
+	// router.HandlerFunc(http.MethodGet, "/v1/movies", app.requirePermission(store.PermissionMoviesRead, app.listMoviesHandler))
+	// router.HandlerFunc(http.MethodGet, "/v1/movies/:movieID", app.requirePermission(store.PermissionMoviesRead, app.showMovieHandler))
 	router.HandlerFunc(http.MethodPut, "/v1/movies/:movieID", app.requirePermission(store.PermissionMoviesWrite, app.putMovieHandler))
 	router.HandlerFunc(http.MethodPatch, "/v1/movies/:movieID", app.requirePermission(store.PermissionMoviesWrite, app.patchMovieHandler))
 	router.HandlerFunc(http.MethodDelete, "/v1/movies/:movieID", app.requirePermission(store.PermissionMoviesWrite, app.deleteMovieHandler))
