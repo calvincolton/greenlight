@@ -35,7 +35,10 @@ func StartDockerCompose() error {
 }
 
 func StopDockerCompose() error {
-	return runCommandWithProject("docker-compose", "greenlight_test", "-f", dockerComposeFile, "down")
+	if err := runCommandWithProject("docker-compose", "greenlight_test", "-f", dockerComposeFile, "down", "-v"); err != nil {
+		return err
+	}
+	return runCommandWithProject("docker", "", "volume", "rm", "greenlight_test_test_db_data")
 }
 
 func MakeRequest(

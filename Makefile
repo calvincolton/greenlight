@@ -63,6 +63,11 @@ build/api:
 # QUALITY CONTROL
 # ==================================================================================== #
 
+## test/coverage: provides a report of total test coverage
+.PHONY: test/coverage
+test/coverage:
+	go test -cover "./cmd/api" "./tests/integration"
+
 ## audit: tidy dependencies, format, vet, and test all code
 .PHONY: audit
 audit:

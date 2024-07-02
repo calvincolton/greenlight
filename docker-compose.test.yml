@@ -40,20 +40,16 @@ services:
       DATABASE_NAME: ${TEST_DATABASE_NAME}
       DATABASE_USER: ${TEST_DATABASE_USER}
       DATABASE_PASSWORD: ${DATABASE_PASSWORD}
-      DATABASE_DSN: postgres://${TEST_DATABASE_USER}:${DATABASE_PASSWORD}@db:5432/${TEST_DATABASE_NAME}?sslmode=disable
+      DATABASE_DSN: ${TEST_DATABASE_DSN}
     volumes:
       - ./migrations:/migrations
-    entrypoint:
-      [
-        "/wait-for-postgres.sh",
-        "db",
-        "migrate",
-        "-path",
-        "/migrations",
-        "-database",
-        "postgres://${TEST_DATABASE_USER}:${DATABASE_PASSWORD}@db:5432/${TEST_DATABASE_NAME}?sslmode=disable",
-        "up",
-      ]
+      - ./tests/integration:/tests/integration
+    entrypoint: >
+      sh -c "
+        /wait-for-postgres.sh db &&
+        migrate -path /migrations -database ${TEST_DATABASE_DSN} up &&
+        psql ${TEST_DATABASE_DSN} -f /tests/integration/seed_test.sql
+      "
     depends_on:
       db:
         condition: service_healthy

@@ -14,7 +14,7 @@ import (
 func TestMain(m *testing.M) {
 	testutils.StartDockerCompose()
 
-	if err := waitForServer("http://localhost:8081/v1/healthcheck", 10, 2*time.Second); err != nil {
+	if err := waitForServer("http://localhost:8081/v1/healthcheck", 10, 3*time.Second); err != nil {
 		log.Fatalf("server did not become ready: %v", err)
 	}
 
