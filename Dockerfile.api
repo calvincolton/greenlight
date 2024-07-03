@@ -27,6 +27,8 @@ RUN apk add --no-cache postgresql-client
 
 # Copy the Pre-built binary file from the previous stage
 COPY --from=builder /app/main .
+COPY --from=builder /app/swagger-ui ./swagger-ui
+COPY --from=builder /app/swagger.yaml ./swagger.yaml
 
 # Copy the wait-for-postgres.sh script
 COPY wait-for-postgres.sh .
