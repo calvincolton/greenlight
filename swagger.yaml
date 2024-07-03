@@ -1,0 +1,48 @@
+openapi: 3.0.0
+info:
+  title: Greenlight API
+  version: 1.0.0
+paths:
+  /movies/{movieID}:
+    get:
+      summary: Show Movie
+      description: Get a movie by its ID
+      parameters:
+        - name: movieID
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  movie:
+                    $ref: "#/components/schemas/Movie"
+        "404":
+          description: Not Found
+        "500":
+          description: Internal Server Error
+components:
+  schemas:
+    Movie:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+        year:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
