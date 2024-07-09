@@ -40,8 +40,6 @@ func (app *application) routes() http.Handler {
 	// Swagger UI and OpenAPI spec
 	swaggerUIDir := http.Dir(filepath.Join(".", "swagger-ui", "dist"))
 	router.Handler(http.MethodGet, "/v1/docs/*filepath", http.StripPrefix("/v1/docs/", http.FileServer(swaggerUIDir)))
-
-	// Serve the OpenAPI spec file
 	apiSpecDir := http.Dir(filepath.Join("cmd", "api"))
 	router.Handler(http.MethodGet, "/v1/swagger-v1.yaml", http.StripPrefix("/v1/", http.FileServer(apiSpecDir)))
 
