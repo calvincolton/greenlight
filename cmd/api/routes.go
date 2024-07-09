@@ -1,16 +1,13 @@
 package main
 
 import (
-	_ "embed"
 	"expvar"
 	"net/http"
+	"path/filepath"
 
 	"github.com/calvincolton/greenlight/internal/store"
 	"github.com/julienschmidt/httprouter"
 )
-
-//go:embed swagger.yaml
-var swaggerYAML []byte
 
 func (app *application) routes() http.Handler {
 	router := httprouter.New()
@@ -39,6 +36,14 @@ func (app *application) routes() http.Handler {
 	// metrics
 	// TODO: hide route via load balancer / reverse proxy so only available locally
 	router.Handler(http.MethodGet, "/debug/vars", expvar.Handler())
+
+	// Swagger UI and OpenAPI spec
+	swaggerUIDir := http.Dir(filepath.Join(".", "swagger-ui", "dist"))
+	router.Handler(http.MethodGet, "/v1/docs/*filepath", http.StripPrefix("/v1/docs/", http.FileServer(swaggerUIDir)))
+
+	// Serve the OpenAPI spec file
+	apiSpecDir := http.Dir(filepath.Join("cmd", "api"))
+	router.Handler(http.MethodGet, "/v1/swagger-v1.yaml", http.StripPrefix("/v1/", http.FileServer(apiSpecDir)))
 
 	router.NotFound = http.HandlerFunc(app.notFoundHandler)
 	router.MethodNotAllowed = http.HandlerFunc(app.methodNotAllowedResponse)
