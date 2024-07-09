@@ -3,6 +3,7 @@ package main
 import (
 	"expvar"
 	"net/http"
+	"path/filepath"
 
 	"github.com/calvincolton/greenlight/internal/store"
 	"github.com/julienschmidt/httprouter"
@@ -10,19 +11,6 @@ import (
 
 func (app *application) routes() http.Handler {
 	router := httprouter.New()
-
-	router.NotFound = http.HandlerFunc(app.notFoundResponse)
-	router.MethodNotAllowed = http.HandlerFunc(app.methodNotAllowedResponse)
-
-	// OpenAPI/swagger
-	// Serve the Swagger UI files
-	router.ServeFiles("/swagger-ui/*filepath", http.Dir("swagger-ui/dist"))
-	router.GET("/swagger.yaml", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-		http.ServeFile(w, r, "swagger.yaml")
-	})
-	router.GET("/docs", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-		http.Redirect(w, r, "/swagger-ui/index.html?url=/swagger.yaml", http.StatusFound)
-	})
 
 	// healthcheck
 	router.HandlerFunc(http.MethodGet, "/v1/healthcheck", app.healthcheckHandler)
@@ -45,8 +33,18 @@ func (app *application) routes() http.Handler {
 	// authentication
 	router.HandlerFunc(http.MethodPost, "/v1/tokens/authentication", app.createAuthenticaitonTokenHandler)
 
+	// metrics
 	// TODO: hide route via load balancer / reverse proxy so only available locally
 	router.Handler(http.MethodGet, "/debug/vars", expvar.Handler())
+
+	// Swagger UI and OpenAPI spec
+	swaggerUIDir := http.Dir(filepath.Join(".", "swagger-ui", "dist"))
+	router.Handler(http.MethodGet, "/v1/docs/*filepath", http.StripPrefix("/v1/docs/", http.FileServer(swaggerUIDir)))
+	apiSpecDir := http.Dir(filepath.Join("cmd", "api"))
+	router.Handler(http.MethodGet, "/v1/swagger-v1.yaml", http.StripPrefix("/v1/", http.FileServer(apiSpecDir)))
+
+	router.NotFound = http.HandlerFunc(app.notFoundHandler)
+	router.MethodNotAllowed = http.HandlerFunc(app.methodNotAllowedResponse)
 
 	return app.metrics(app.recoverPanic(app.enableCORS(app.rateLimit(app.authenticate(router)))))
 }

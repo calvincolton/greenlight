@@ -33,6 +33,11 @@ COPY --from=builder /app/swagger.yaml ./swagger.yaml
 # Copy the wait-for-postgres.sh script
 COPY wait-for-postgres.sh .
 
+# Copy all OpenAPI (Swagger) related files
+COPY cmd/api/swagger-v1.yaml ./cmd/api/swagger-v1.yaml
+COPY swagger-ui ./swagger-ui
+COPY swagger-initializer.js ./swagger-ui/dist/swagger-initializer.js
+
 # Make the script executable
 RUN chmod +x wait-for-postgres.sh
 
